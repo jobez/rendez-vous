@@ -1,0 +1,2 @@
+0x04388ecf27de76fb51b59e494982c27f9db12809c0d55c4bcea632c7bdb6c354:artifacts/abis/prompt.json
+0x0325927dda9f3d4c821a785da96648791fce44d1c47ab9d284f969ef835447f3:artifacts/abis/prompt.json

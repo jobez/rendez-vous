@@ -1,0 +1,96 @@
+[
+    {
+        "data": [
+            {
+                "name": "has_cypher",
+                "type": "felt"
+            },
+            {
+                "name": "addr",
+                "type": "felt"
+            },
+            {
+                "name": "rnd",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "set_cypher_called",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "name": "s_seq_len",
+                "type": "felt"
+            },
+            {
+                "name": "s_seq",
+                "type": "felt*"
+            }
+        ],
+        "name": "write_the_seq_of_short_str",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "ss",
+                "type": "felt"
+            }
+        ],
+        "name": "write_the_short_string",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "read_the_seq_of_short_str",
+        "outputs": [
+            {
+                "name": "ss_len",
+                "type": "felt"
+            },
+            {
+                "name": "ss",
+                "type": "felt*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "read_the_short_string",
+        "outputs": [
+            {
+                "name": "ss",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "set_cypher",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "get_cypher",
+        "outputs": [
+            {
+                "name": "has_cypher",
+                "type": "felt"
+            },
+            {
+                "name": "cypher",
+                "type": "felt"
+            }
+        ],
+        "type": "function"
+    }
+]

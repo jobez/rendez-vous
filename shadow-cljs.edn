@@ -1,0 +1,26 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["artifacts"
+  "src/dev"
+  "src/main"
+  "src/stories"
+  "src/test"]
+
+ :dependencies
+ [[reagent "1.1.1"]
+  [com.hyperfiddle/rcf "20220405"]
+  ]
+
+ :dev-http
+ {8080 "public"}
+ :builds
+ {:jhnn {:target :browser
+         :modules {:main {:init-fn jhnn/init}}}
+
+  :stories {:target     :npm-module
+            :ns-regexp  "-stories$"
+            :output-dir "public/js/stories"}
+  }}
+
+
+;; npx shadow-cljs watch jhnn
