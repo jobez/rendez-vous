@@ -39,7 +39,7 @@ class CairoContractTest(TestCase):
     #     )
 
     @pytest.mark.asyncio
-    async def test_cypher(self):
+    async def test_prompt(self):
         prompt = str_to_felt("I am not sure if the difference is linear across all potential sentences. I guess the question is how often do these really infinitesmal values occur in embeddings? Is it model dependent?")
         prompt_h = reduce(pedersen_hash, prompt)              
         await self.contract.submit_prompt(prompt_arr=prompt, prompt_hash=prompt_h).invoke()
