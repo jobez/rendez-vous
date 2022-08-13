@@ -25,6 +25,10 @@ def single_str_to_felt(text):
 def str_to_felt(text):
     return list(map(single_str_to_felt, wrap(text, 31)))
 
+def felt_to_str(felt):
+    length = (felt.bit_length() + 7) // 8
+    return felt.to_bytes(length, byteorder="big").decode("utf-8")
+
 SCALE = 2 ** 61
 PRIME = 3618502788666131213697322783095070105623107215331596699973092056135872020481
 PRIME_HALF = PRIME / 2
