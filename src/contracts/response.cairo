@@ -91,6 +91,22 @@ func commit_hash_check{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
 
 end
 
+func rendez_vous_check{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(sender, receiver : felt) -> (signed_message_hash, signed_message_length, signed_message_key : felt):
+    let sender_sends_to_receiver : felt = hash2{hash_ptr=pedersen_ptr}(sender, receiver)  
+
+    let rendez_vous_details : DirMatchDetails = directed_match_to_details.read(sender_sends_to_receiver)
+
+    let signed_message_hash : felt = rendez_vous_details.signed_message_hash
+    let signed_message_length : felt = rendez_vous_details.signed_message_length    
+
+    with_attr error_message ("arrangements have not been from #{sender} to #{receiver}. if #{sender} is yours, make arrangements by calling `arrange_rendez_vous`"):
+        assert_not_zero(signed_message_hash)
+        assert_not_zero(signed_message_length)
+    end
+
+    return (signed_message_hash, signed_message_length, rendez_vous_details.rendez_vous)
+end
+
 # functions
 
 func write_se_to_storage{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(resp_h : felt, se_arr_len : felt, se_arr : felt*):
@@ -409,18 +425,13 @@ func get_rendez_vous{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     let (local sm_arr : felt*) = alloc()
     commit_hash_check(salt, response_arr_len, response_arr, response_h)
 
-    let directed_match_hash : felt = hash2{hash_ptr=pedersen_ptr}(their_response_h, response_h )  
-
-    let rendez_vous_details : DirMatchDetails = directed_match_to_details.read(directed_match_hash)
-    let rendez_vous_mh : felt = rendez_vous_details.signed_message_hash
-    let rendez_vous_m_l : felt = rendez_vous_details.signed_message_length    
-
-    with_attr error_message ("arrangements have not been made! call 'arrange_rendez_vous' if you are sure this is a match"):
-        assert_not_zero(rendez_vous_mh)
-        assert_not_zero(rendez_vous_m_l)
-    end
-    read_sm_from_storage(rendez_vous_mh, rendez_vous_m_l, sm_arr)
-    return (rendez_vous_details.rendez_vous, rendez_vous_m_l, sm_arr)
+    # the case where i disclose my signed message to matchee
+let (signed_message_hash, signed_message_length, signed_message_key : felt) =  rendez_vous_check(response_h, their_response_h) 
+    # the case where the matchee disclosse their signed message to me
+    rendez_vous_check(their_response_h, response_h) 
+    
+    read_sm_from_storage(signed_message_hash, signed_message_length, sm_arr)
+    return (signed_message_key, signed_message_length, sm_arr)
 end
     
 @constructor

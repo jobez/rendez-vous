@@ -98,49 +98,85 @@ class CairoContractTest(TestCase):
 
     @pytest.mark.asyncio
     async def test_response3(self):
+
+        
         [prompt, prompt_h] = raw_prompt_to_prompt("What is love?")
-        [resp0, resp_embedding, resp_h] = raw_resp_to_resp("Love is a feeling.")
-        [resp1, resp_embedding1, resp_h1] = raw_resp_to_resp("Love is a feeling of grace.")
+
+        match0_response = "Love is a feeling."
+        match1_response = "Love is a feeling of grace."
+        [resp0, resp_embedding, resp_h] = raw_resp_to_resp(match0_response)
+        [resp1, resp_embedding1, resp_h1] = raw_resp_to_resp(match1_response)
         [resp2, resp_embedding2, resp_h2] = raw_resp_to_resp("I am not sure, but I would rather talk about lasagna.")
+
+        iv = get_random_bytes(16)        
+        
         print("we submit a prompt")
-        iv = get_random_bytes(16)
+       
         await self.contract.submit_prompt(prompt_arr=prompt, prompt_hash=prompt_h).invoke()
         print("we submit one response")        
+
         await self.contract.submit_response(prompt_h=prompt_h, commit_hash=resp_h, sentence_embedding_arr=list(map(to64x61, resp_embedding))).invoke()
+
         print("we submit two response")                
+
         await self.contract.submit_response(prompt_h=prompt_h, commit_hash=resp_h2, sentence_embedding_arr=list(map(to64x61, resp_embedding2))).invoke()
+
         print("we submit three response")                        
+
         await self.contract.submit_response(prompt_h=prompt_h, commit_hash=resp_h1, sentence_embedding_arr=list(map(to64x61, resp_embedding1))).invoke()
+
         print("we submit arrange rendez vous for h1")                                
+
         await self.contract.arrange_rendez_vous(prompt_h=prompt_h, response_h=resp_h1,).invoke()
+
         print("we submit arrange rendez vous for h")          
+
         await self.contract.arrange_rendez_vous(prompt_h=prompt_h, response_h=resp_h,).invoke()
+
         print("we submit arrange rendez vous for h")        
+
         res_a = await self.contract.check_matches_for_response_h(prompt_h=prompt_h, salt=100, response_h=resp_h1, response_arr=resp1).call()
+
         print("check matches for h1")                
+
         res_b = await self.contract.check_matches_for_response_h(prompt_h=prompt_h, salt=100, response_h=resp_h, response_arr=resp0).call()
+
         print("check matches for h0")                        
+
         a_their_response_h = res_a.call_info.result[1]
+
         b_their_response_h = res_b.call_info.result[1]
+
         res1 = await self.contract.get_rendez_vous_detail(prompt_h=prompt_h, salt=100, response_h=resp_h1, response_arr=resp1, their_response_h=a_their_response_h).call()
         res2 = await self.contract.get_rendez_vous_detail(prompt_h=prompt_h, salt=100, response_h=resp_h, response_arr=resp0, their_response_h=b_their_response_h).call()
         
         key_for_resp_h1 = binascii.unhexlify(format(res1.call_info.result[0], 'x'))
         key_for_resp_h2 = binascii.unhexlify(format(res2.call_info.result[0], 'x'))
+
+
+        
         # IV = binascii.unhexlify('69C4E0D86A7B0430D8CDB78070B4C55A')        
+
         encryptor_h1 = AES.new(pad(key_for_resp_h1, AES.block_size), AES.MODE_CBC, iv)
         encryptor_h2 = AES.new(pad(key_for_resp_h2, AES.block_size), AES.MODE_CBC, iv)
-        encrypted_h1 = encryptor_h1.encrypt(pad("Love is a feeling.".encode('utf-8'), AES.block_size))
-        print(f"padded key {pad(key_for_resp_h1, AES.block_size)=}")
-        encrypted_h2 = list(encryptor_h2.encrypt(pad("Love is a feeling of grace.".encode('utf-8'), AES.block_size)))
+
+        encrypted_h1 = list(encryptor_h2.encrypt(pad(match0_response.encode('utf-8'), AES.block_size)))
+        encrypted_h2 = list(encryptor_h2.encrypt(pad(match1_response.encode('utf-8'), AES.block_size)))
+
         print(f"this is what goes in wrt encryption {encrypted_h2=}")
+        print(f"this is what goes in wrt encryption {encrypted_h1=}")
+        
         encrypted_h2_h =  reduce(pedersen_hash, encrypted_h2)
+        encrypted_h1_h =  reduce(pedersen_hash, encrypted_h1)
         await self.contract.submit_response_for_match(prompt_h=prompt_h, response_h=resp_h1, match_h=a_their_response_h, encr_arr_hash=encrypted_h2_h, encr_arr=encrypted_h2).invoke()
+        await self.contract.submit_response_for_match(prompt_h=prompt_h, response_h=resp_h, match_h=b_their_response_h, encr_arr_hash=encrypted_h1_h, encr_arr=encrypted_h1).invoke()
+        
         res =  await self.contract.get_rendez_vous(prompt_h=prompt_h, salt=100, response_h=resp_h, response_arr=resp0, their_response_h=b_their_response_h).call()
+
         print(f"{res.call_info.result=}")
-        # encrypted = pad(binascii.unhexlify(format(res.call_info.result.pop(), 'x')), AES.block_size)
-        # rv_l = res.call_info.result.pop()
-        print(f"{res.call_info.result=}")
+        key_over_wire = binascii.unhexlify(format(res.call_info.result[0],
+                                                      'x'))
+        rv_l = res.call_info.result[1]
         print(f"{res.call_info.result[2:]=}")
         rv = bytes(res.call_info.result[2:])
         print(f"{rv=}")
@@ -148,11 +184,11 @@ class CairoContractTest(TestCase):
         encryptor_h2_b = AES.new(pad(key_for_resp_h2, AES.block_size), AES.MODE_CBC, iv)        
 #        maybe_decrypt1 = unpad(encryptor_h1_a.decrypt(rv), AES.block_size).decode('utf-8')
 #        maybe_decrypt1 = encryptor_h1_a.decrypt(rv).decode('utf-8')        
-        maybe_decrypt2 = encryptor_h2_b.decrypt(rv).decode('utf-8')               
+        maybe_decrypt2 = unpad(encryptor_h2_b.decrypt(rv), AES.block_size).decode('utf-8')               
         print(f" {maybe_decrypt2=} ")
         self.assertEqual(
-            encrypted_h1,
-            encrypted_h2,
+            maybe_decrypt2,
+            match0_response,
             "Contract is still not correct",
         )        
 

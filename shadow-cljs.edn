@@ -15,7 +15,7 @@
  {8080 "public"}
  :builds
  {:jhnn {:target :browser
-         :modules {:main {:init-fn jhnn/init}}}
+         :modules {:main {:init-fn rv/init}}}
 
   :stories {:target     :npm-module
             :ns-regexp  "-stories$"
@@ -24,3 +24,5 @@
 
 
 ;; npx shadow-cljs watch jhnn
+
+;; starknet-compile --cairo_path '/home/jhnn/internet-computers/starknet/jhnn_client/src/' --disable_hint_validation ./src/contracts/response.cairo --output artifacts/abi/response.json
