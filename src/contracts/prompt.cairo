@@ -55,11 +55,11 @@ func submit_prompt{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     let address : felt = get_caller_address() 
     let curr_prompts_idx : felt =  prompts_len.read()
     let iter_prompts_idx : felt = curr_prompts_idx + 1
-    let prompt_details = PromptDetails(address, curr_prompts_idx)
+    let prompt_details = PromptDetails(address, iter_prompts_idx)
     prompt_h_to_details.write(prompt_hash, prompt_details)
-    prompts_idx_to_prompt_len.write(curr_prompts_idx, prompt_arr_len)
+    prompts_idx_to_prompt_len.write(iter_prompts_idx, prompt_arr_len)
     prompts_len.write(iter_prompts_idx)
-    write_the_seq_of_short_str_to_storage(curr_prompts_idx, prompt_arr_len, prompt_arr)
+    write_the_seq_of_short_str_to_storage(iter_prompts_idx, prompt_arr_len, prompt_arr)
     return ()
 end
 
@@ -80,6 +80,13 @@ func get_prompt{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
     let (local p_array : felt*) = alloc()
     let p_details : PromptDetails = prompt_h_to_details.read(prompt_hash)
     let p_idx : felt = p_details.prompt_idx
+    let incited_by : felt = p_details.incited_by
+
+    with_attr error_message ("prompt_h doesn't exist"):
+        assert_not_zero(incited_by)
+    end
+    
+
     let p_length : felt = prompts_idx_to_prompt_len.read(p_idx)
     %{
         print(f"Printing {ids.p_idx=} {ids.p_length=} ") 
@@ -90,3 +97,52 @@ func get_prompt{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
     return (p_length, p_array)    
 end
 
+func inner_get_prompt{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(prompt_idx, prompt_len, dest_arr_l : felt,  dest_arr : felt*) -> (dest_len : felt):
+     alloc_locals
+     if prompt_len == 0:
+        return (dest_arr_l)
+     end
+
+     let prompt_el : felt = prompts.read(prompt_idx, prompt_len)
+     assert [dest_arr] = prompt_el
+
+     %{
+    print(f"inner get prompt {ids.prompt_idx=} {ids.prompt_el=} ")
+    %}
+     let updated_dest_arr : felt = inner_get_prompt(prompt_idx, prompt_len-1, dest_arr_l+1, dest_arr+1)          
+     return (updated_dest_arr)
+end
+
+func outer_get_prompts{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(curr_prompts_idx, dest_arr_l : felt,  dest_arr : felt*) -> (dest_len : felt):
+     alloc_locals
+
+     if curr_prompts_idx == 0:
+        return (dest_arr_l)
+     end
+
+     
+     let this_prompts_len : felt = prompts_idx_to_prompt_len.read(curr_prompts_idx)
+
+
+     let inc_by : felt = this_prompts_len+1
+     
+    %{
+    print(f"outer get prompt {ids.curr_prompts_idx=} {ids.this_prompts_len=} ")
+    %}
+
+
+     let updated_dest_arr_l : felt = inner_get_prompt(curr_prompts_idx, this_prompts_len, dest_arr_l+1, dest_arr+1)
+
+     assert [dest_arr] = 0
+
+let updated_dest_arr_l_ : felt =  outer_get_prompts(curr_prompts_idx-1, updated_dest_arr_l,  dest_arr+inc_by)
+     return (updated_dest_arr_l_)                                          
+end
+@view
+func get_all_prompts{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (p_arr_len : felt, p_arr : felt*):
+    alloc_locals
+    let (local dest_arr : felt*) = alloc()
+    let total_prompts : felt = prompts_len.read()
+    let dest_prompt_len : felt = outer_get_prompts(total_prompts, 0, dest_arr) 
+    return (dest_prompt_len, dest_arr)
+end

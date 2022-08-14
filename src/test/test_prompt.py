@@ -50,3 +50,28 @@ class CairoContractTest(TestCase):
             prompt,
             "Contract is still not correct",
         )    
+
+    @pytest.mark.asyncio
+    async def test_get_all_prompt(self):
+        prompt1 = str_to_felt("life?")
+        prompt2 = str_to_felt("death?")
+        prompt3 = str_to_felt("How does it rain in Eurasia? Well, I hope.")
+        prompt4 = str_to_felt("What do you dream of? Do you lucid dream? Do you remember your dreams?")        
+        prompt_h1 = reduce(pedersen_hash, prompt1)
+        prompt_h2 = reduce(pedersen_hash, prompt2)
+        prompt_h3 = reduce(pedersen_hash, prompt3)
+        prompt_h4 = reduce(pedersen_hash, prompt4)                              
+        await self.contract.submit_prompt(prompt_arr=prompt1, prompt_hash=prompt_h1).invoke()
+        await self.contract.submit_prompt(prompt_arr=prompt2, prompt_hash=prompt_h2).invoke()
+        await self.contract.submit_prompt(prompt_arr=prompt3, prompt_hash=prompt_h3).invoke()
+        await self.contract.submit_prompt(prompt_arr=prompt4, prompt_hash=prompt_h4).invoke()                
+        res = await self.contract.get_all_prompts().call()
+        zero_pad = [0]
+        result = zero_pad + prompt4  + zero_pad + prompt3 + zero_pad + prompt2 + zero_pad + prompt1
+        result.insert(0, len(result))
+        self.assertEqual(
+            res.call_info.result,
+            result,
+            "Contract is still not correct",
+        )    
+        
