@@ -15,6 +15,8 @@
  {8080 "public"}
  :builds
  {:jhnn {:target :browser
+         :closure-defines {rv.hf-token #shadow/env "HF_TOKEN"
+                           rv.rv-addr #shadow/env "RV_TOKEN"}
          :modules {:main {:init-fn rv/init}}}
 
   :stories {:target     :npm-module
@@ -25,4 +27,4 @@
 
 ;; npx shadow-cljs watch jhnn
 
-;; starknet-compile --cairo_path '/home/jhnn/internet-computers/starknet/jhnn_client/src/' --disable_hint_validation ./src/contracts/response.cairo --output artifacts/abi/response.json
+;; starknet-compile --cairo_path '/home/jhnn/internet-computers/starknet/jhnn_client/src/' --disable_hint_validation ./src/contracts/response.cairo --output artifacts/abis/response.json

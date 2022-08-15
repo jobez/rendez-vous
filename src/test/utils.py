@@ -46,11 +46,12 @@ def to64x61(num):
 
 def raw_resp_to_resp(raw_resp):
     resp_embedding = model.encode([raw_resp])[0]
+    incr_resp_embedding = [x+1.0 for x in resp_embedding]
     resp2 = str_to_felt(raw_resp)
     resp2.insert(0, 100)
     resp_h = reduce(pedersen_hash, resp2)
     resp = str_to_felt(raw_resp)
-    return [resp, resp_embedding, resp_h]
+    return [resp, incr_resp_embedding, resp_h]
 
 def raw_prompt_to_prompt(raw_prompt):
     prompt = str_to_felt(raw_prompt)

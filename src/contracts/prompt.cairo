@@ -3,7 +3,7 @@
 from starkware.cairo.common.alloc import alloc
 from starkware.starknet.common.syscalls import get_contract_address, get_caller_address
 from starkware.cairo.common.cairo_builtins import HashBuiltin
-from starkware.cairo.common.math import assert_not_zero
+from starkware.cairo.common.math import assert_not_zero, assert_le
 from cairo_math_64x61.math64x61 import Math64x61
 
 const XOROSHIRO_ADDR = 0x06c4cab9afab0ce564c45e85fe9a7aa7e655a7e0fd53b7aea732814f3a64fbee
@@ -17,6 +17,8 @@ end
 struct PromptDetails:
     member incited_by : felt
     member prompt_idx : felt
+    member thres_num : felt
+    member thres_denom : felt
 end
 
 
@@ -51,11 +53,17 @@ end
 
 
 @external
-func submit_prompt{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(prompt_hash: felt, prompt_arr_len: felt, prompt_arr: felt*):
+func submit_prompt{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(prompt_hash: felt, thres_num, thres_denom, prompt_arr_len: felt, prompt_arr: felt*):
     let address : felt = get_caller_address() 
     let curr_prompts_idx : felt =  prompts_len.read()
     let iter_prompts_idx : felt = curr_prompts_idx + 1
-    let prompt_details = PromptDetails(address, iter_prompts_idx)
+
+    with_attr error_message ("a prompt can only have two responses"):
+        assert_le(iter_prompts_idx, 3)
+    end
+
+  
+    let prompt_details = PromptDetails(address, iter_prompts_idx, thres_num, thres_denom)
     prompt_h_to_details.write(prompt_hash, prompt_details)
     prompts_idx_to_prompt_len.write(iter_prompts_idx, prompt_arr_len)
     prompts_len.write(iter_prompts_idx)

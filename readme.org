@@ -1,0 +1,74 @@
+* rendez vous
+
+Although a small step in a general direction, this project is an experiment in building a deeper form of aggregation.
+
+Computational systems service us with suggestion feeds for consumption based on an immediate time horizon.
+
+Could they do something with more significance and meaning?
+
+The idea I have had for a while is something that could mediate the life experience of, say, a father and son.
+
+The son, on a particular day of anxiety, expresses sincere doubts about his standing with his peer group. The journalling system he confesses his thoughts to highlights a particular paragraph, showing that it had particular semantic similarity to something his father or grandfather, grandmotheer--some distant relative wrote when they, too, were coming of age.
+
+The small step this project takes to that sort of vision is wonder to what extent that sort of system can exist on chain. This project does not a whole ml model that take a sentence and encodes it to a feature array.
+
+The model is treated as a black box. Sentences go in, a sentence embedding comes out. This 700-ish element array gets passed and stored on chain and compared with cosign similarity on chain.
+** how to see it in action
+ The test that fleshes out the full flow of the little system is `test_response3` in `src/test/test_responses.`
+
+ You can run that via
+
+#+begin_src shell
+pip install -r requirements.txt
+#+end_src
+
+then
+#+begin_src shell
+cd src && pytest test/test_responses.py -s -W ignore::DeprecationWarning -k test_response3
+#+end_src
+
+It is a burly and slow test, mind you.
+
+ There is a webclient that is probably better for me to demo in a video than for anyone to retry. It uses a webservice to generate the sentence embeddings, and that service shuts down intermittently. For the brave, you can get that up and running via
+
+You can compile the contract via
+
+#+begin_quote
+starknet-compile --cairo_path './src/' --disable_hint_validation ./src/contracts/response.cairo --output artifacts/abis/response.json
+#+end_quote
+ 
+#+begin_src shell
+npm install
+#+end_src
+ or
+
+ #+begin_src shell
+yarn
+#+end_src
+ 
+#+begin_src shell
+HF_TOKEN=<your hugging> RV_ADDR=<your own rv contract> npx shadow-cljs watch jhnn
+#+end_src
+
+To deploy your own rv contract, you need to pass it an instance of `xoroshiro_128` star star contract. The author deployed one to testnet you can use: https://goerli.voyager.online/contract/0x06c4cab9afab0ce564c45e85fe9a7aa7e655a7e0fd53b7aea732814f3a64fbee#transactions
+
+
+Here is more info about getting the security token for the hugging face api: https://huggingface.co/docs/hub/security-tokens
+
+
+** what it does
+
+I narrowed the scope from the base vision to wanting to build something that had the following properties:
+
+ Users can submit prompts. Users can write responses to prompts locally--it is meant to encourage self-reflection and sincerity, a private and not necessarily public voice.
+
+ But that private voice can be disclosed to another if, and only if, both parties have responses to a prompt that are within a threshold of similarity.
+** how it does it
+
+A user puts a commitment of a response to the chain. A commitment is a hash of the content of the response, along with a salt. It goes up with the full sentence embedding.
+
+A user can check for matches. When there is a resultant match, a user can decide to disclose their response, but the 'rendez vous' is only complete when both parties disclose their responses to each other.
+
+When that is done, each can call `get_rendez_vous` but have to prove they have the original message to get the encrypted payload of the others message.
+
+As previously stated, the cosine similarity is done on chain. Because I wanted to experiment with longer horizons of 'aggregation', writing a sentence embedding to a chain, even if hilariously expensive, was worth experimenting with.
