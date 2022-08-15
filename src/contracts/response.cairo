@@ -552,9 +552,9 @@ func get_rendez_vous{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     commit_hash_check(salt, response_arr_len, response_arr, response_h)
 
     # the case where i disclose my signed message to matchee
-    rendez_vous_check(response_h, their_response_h) 
+let (_, _, signed_message_key : felt) =    rendez_vous_check(response_h, their_response_h) 
     # the case where the matchee disclosse their signed message to me
-let (signed_message_hash, signed_message_length, signed_message_key : felt) = rendez_vous_check(their_response_h, response_h) 
+let (signed_message_hash, signed_message_length, _ : felt) = rendez_vous_check(their_response_h, response_h) 
    %{
     print(f"get rv {ids.signed_message_key} ")
     %}

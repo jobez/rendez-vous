@@ -149,10 +149,11 @@ class CairoContractTest(TestCase):
 
         their_response_h = res_h.call_info.result[2]
 
-        their_response_h1 = res_h1.call_info.result[1]
+        their_response_h1 = res_h1.call_info.result[2]
 
 
-        breakpoint()
+
+
 
         
         res = await self.contract.get_rendez_vous_detail(prompt_h=prompt_h, salt=100, response_h=resp_h, response_arr=resp0, their_response_h=their_response_h).call()        
@@ -200,17 +201,18 @@ class CairoContractTest(TestCase):
         print(f"{res.call_info.result[2:]=}")
         rv = bytes(res.call_info.result[2:])
         print(f"{rv=}")
-        encryptor_h1_a = AES.new(pad(key_for_resp_h, AES.block_size), AES.MODE_CBC, iv)
+        encryptor_h1_a = AES.new(pad(key_over_wire, AES.block_size), AES.MODE_CBC, iv)
         encryptor_h2_b = AES.new(pad(key_for_resp_h1, AES.block_size), AES.MODE_CBC, iv)        
-#        maybe_decrypt1 = unpad(encryptor_h1_a.decrypt(rv), AES.block_size).decode('utf-8')
+        maybe_decrypt1 = unpad(encryptor_h1_a.decrypt(rv), AES.block_size).decode('utf-8')
 #        maybe_decrypt1 = encryptor_h1_a.decrypt(rv).decode('utf-8')
 
         # maybe_decrypt2 = unpad(encryptor_h1_a.decrypt(rv), AES.block_size).decode('utf-8')               
 
         # print(f" {maybe_decrypt2=} ")
+        breakpoint()
         self.assertEqual(
-            encrypted_h1,
-            res.call_info.result[2:],
+            maybe_decrypt1,
+            match1_response,
             "Contract is still not correct",
         )        
 

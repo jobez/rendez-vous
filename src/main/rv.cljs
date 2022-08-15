@@ -31,7 +31,7 @@
 ;; * helpers
 
 (goog-define hf-token "")
-(goog-define rv-addr "0x1df523558fb2d54be620503fd027e95519503b82b3245c8d587d9460c2c4e81")
+(goog-define rv-addr "0x23f15b473e03015c0ae1f597ab1c417ee3b8337a64c40349b761474e11375c1")
 
 (defn edn-to-json-str
   "Convert EDN to JSON str"
@@ -335,8 +335,14 @@
        (fn []))
      #js [rv-res])
     (js/console.warn error1)
+
     (def rv-res rv-res)
     [:div
+     [:div (some->> 
+            rv-res
+            js->clj
+            cljs.pprint/pprint
+            with-out-str)]
      (when-not rv-res
       [:button
        {:on-click (fn [e]
@@ -382,12 +388,11 @@
                first
                toHex
                )]
-
+    (js/console.error error)
    [:div
-    [:div (toHex match_hash)]
-    [:div (.toString (helpers/from64x61 similarity))]
-    [:div signing-hash]
-    [:div error]
+    [:div ("Match hash " (toHex match_hash))]
+    [:div (str "similiarity" (.toString (helpers/from64x61 similarity)))]
+    ;; [:div signing-hash]
     (when signing-hash
       [:f> disclose-view prompt-h salted-response-hash (toHex match_hash) text encoded-short-str-response signing-hash])]))
 
